@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
-import { getEmbedding, createChatCompletion } from '@/lib/openai'
+import { supabaseAdmin } from '../../../lib/supabase'
+import { getEmbedding, createChatCompletion } from '../../../lib/openai'
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +9,6 @@ export async function POST(req: Request) {
 
     const qEmbedding = await getEmbedding(question)
 
-    // Simple retrieval of latest 4 documents (replace with vector search if desired)
     const { data, error } = await supabaseAdmin
       .from('documents')
       .select('id, title, content, metadata')
@@ -22,14 +21,8 @@ export async function POST(req: Request) {
       .map((d, i) => `Document ${i + 1} — ${d.title || 'untitled'}:\n${d.content}`)
       .join('\n\n')
 
-    const system = {
-      role: 'system',
-      content:
-        'You are a helpful Bible study assistant. Use the provided documents and scripture references to answer the user.'
-    }
-
     const messages = [
-      system,
+      { role: 'system', content: 'You are a helpful Bible study assistant.' },
       { role: 'user', content: `Context:\n${contextText}\n\nQuestion: ${question}` }
     ]
 
